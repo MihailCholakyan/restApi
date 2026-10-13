@@ -1,0 +1,54 @@
+#include <string>
+using namespace std;
+
+class User {
+protected:
+    int id;
+    string name;
+
+public:
+    User(int id, const string& name) {
+        this->id = id;
+        this->name = name;
+    }
+
+    virtual ~User() = default;
+
+    int getId() const { return id; }
+    string getName() const { return name; }
+    void setName(const string& name) { this->name = name; }
+
+    virtual void printInfo() const = 0;
+};
+
+class Student : public User {
+private:
+    string group;
+
+public:
+    Student(int id, const string& name, const string& group)
+        : User(id, name), group(group) {}
+
+    string getGroup() const { return group; }
+    void setGroup(const string& group) { this->group = group; }
+
+    void printInfo() const override {
+        // вывод информации о студенте
+    }
+};
+
+class Teacher : public User {
+private:
+    string subject;
+
+public:
+    Teacher(int id, const string& name, const string& subject)
+        : User(id, name), subject(subject) {}
+
+    string getSubject() const { return subject; }
+    void setSubject(const string& subject) { this->subject = subject; }
+
+    void printInfo() const override {
+        // вывод информации о преподавателе
+    }
+};
