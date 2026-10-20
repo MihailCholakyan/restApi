@@ -1,4 +1,6 @@
 #include <string>
+#include <iostream>
+#include <vector>
 using namespace std;
 
 class User {
@@ -33,7 +35,9 @@ public:
     void setGroup(const string& group) { this->group = group; }
 
     void printInfo() const override {
-        // вывод информации о студенте
+        cout << "[Студент] ID: " << id
+             << " | Имя: " << name
+             << " | Группа: " << group << endl;
     }
 };
 
@@ -49,6 +53,30 @@ public:
     void setSubject(const string& subject) { this->subject = subject; }
 
     void printInfo() const override {
-        // вывод информации о преподавателе
+        cout << "[Преподаватель] ID: " << id
+             << " | Имя: " << name
+             << " | Предмет: " << subject << endl;
     }
 };
+
+int main() {
+    vector<User*> users;
+
+    users.push_back(new Student(101, "Иван Иванов", "Группа А-101"));
+    users.push_back(new Teacher(201, "Петр Петров", "Математика"));
+    users.push_back(new Student(102, "Мария Сидорова", "Группа Б-202"));
+    users.push_back(new Teacher(202, "Анна Смирнова", "Физика"));
+
+    cout << "\nИнформация о пользователях" << endl;
+    for (size_t i = 0; i < users.size(); ++i) {
+        users[i]->printInfo();
+    }
+
+    cout << "\nУдаление объектов " << endl;
+    for (size_t i = 0; i < users.size(); ++i) {
+        delete users[i];
+    }
+
+    cout << "Все объекты удалены. Программа завершена." << endl;
+    return 0;
+}
