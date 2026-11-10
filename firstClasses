@@ -9,10 +9,7 @@ protected:
     string name;
 
 public:
-    User(int id, const string& name) {
-        this->id = id;
-        this->name = name;
-    }
+    User(int id, const string& name) : id(id), name(name) {}
 
     virtual ~User() = default;
 
@@ -20,25 +17,8 @@ public:
     string getName() const { return name; }
     void setName(const string& name) { this->name = name; }
 
+    virtual string getRole() const = 0;
     virtual void printInfo() const = 0;
-};
-
-class Student : public User {
-private:
-    string group;
-
-public:
-    Student(int id, const string& name, const string& group)
-        : User(id, name), group(group) {}
-
-    string getGroup() const { return group; }
-    void setGroup(const string& group) { this->group = group; }
-
-    void printInfo() const override {
-        cout << "[Студент] ID: " << id
-             << " | Имя: " << name
-             << " | Группа: " << group << endl;
-    }
 };
 
 class Teacher : public User {
@@ -52,27 +32,74 @@ public:
     string getSubject() const { return subject; }
     void setSubject(const string& subject) { this->subject = subject; }
 
+    string getRole() const override { return "Преподаватель"; }
+
     void printInfo() const override {
-        cout << "[Преподаватель] ID: " << id
+        cout << "[" << getRole() << "] ID: " << id
              << " | Имя: " << name
              << " | Предмет: " << subject << endl;
     }
 };
 
-int main() {
-    vector<User*> users;
+class Student : public User {
+private:
+    string group;
+    Teacher* curator;
 
-    users.push_back(new Student(101, "Иван Иванов", "Группа А-101"));
-    users.push_back(new Teacher(201, "Петр Петров", "Математика"));
-    users.push_back(new Student(102, "Мария Сидорова", "Группа Б-202"));
-    users.push_back(new Teacher(202, "Анна Смирнова", "Физика"));
+public:
+    Student(int id, const string& name, const string& group, Teacher* curator = nullptr)
+        : User(id, name), group(group), curator(curator) {}
 
-    cout << "\nИнформация о пользователях" << endl;
+    string getGroup() const { return group; }
+    void setGroup(const string& group) { this->group = group; }
+
+    Teacher* getCurator() const { return curator; }
+    void setCurator(Teacher* curator) { this->curator = curator; }
+
+    string getRole() const override { return "Студент"; }
+
+    void printInfo() const override {
+        cout << "[" << getRole() << "] ID: " << id
+             << " | Имя: " << name
+             << " | Группа: " << group;
+        if (curator != nullptr) {
+            cout << " | Куратор: " << curator->getName();
+        }
+        cout << endl;
+    }
+};
+
+void printAll(const vector<User*>& users) {
+    cout << "\n=== Список пользователей ===" << endl;
     for (size_t i = 0; i < users.size(); ++i) {
         users[i]->printInfo();
     }
+}
 
-    cout << "\nУдаление объектов " << endl;
+int main() {
+    Teacher* t1 = new Teacher(201, "Петр Петров", "Математика");
+    Teacher* t2 = new Teacher(202, "Анна Смирнова", "Физика");
+
+    vector<User*> users;
+
+    users.push_back(new Student(101, "Иван Иванов", "Группа А-101", t1));
+    users.push_back(new Student(102, "Мария Сидорова", "Группа Б-202", t2));
+    
+    users.push_back(t1);
+    users.push_back(t2);
+
+    printAll(users);
+
+    cout << "\n=== Связи 'студент -> куратор' ===" << endl;
+    for (size_t i = 0; i < users.size(); ++i) {
+        Student* s = dynamic_cast<Student*>(users[i]);
+        if (s != nullptr && s->getCurator() != nullptr) {
+            cout << s->getName() << " учится у куратора "
+                 << s->getCurator()->getName() << endl;
+        }
+    }
+
+    cout << "\nУдаление объектов..." << endl;
     for (size_t i = 0; i < users.size(); ++i) {
         delete users[i];
     }
