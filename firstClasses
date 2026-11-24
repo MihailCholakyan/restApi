@@ -3,6 +3,8 @@
 #include <vector>
 using namespace std;
 
+class Student; // предварительное объявление
+
 class User {
 protected:
     int id;
@@ -10,12 +12,10 @@ protected:
 
 public:
     User(int id, const string& name) : id(id), name(name) {}
-
     virtual ~User() = default;
 
     int getId() const { return id; }
     string getName() const { return name; }
-    void setName(const string& name) { this->name = name; }
 
     virtual string getRole() const = 0;
     virtual void printInfo() const = 0;
@@ -24,21 +24,26 @@ public:
 class Teacher : public User {
 private:
     string subject;
+    vector<Student*> students; // Список студентов куратора
 
 public:
     Teacher(int id, const string& name, const string& subject)
         : User(id, name), subject(subject) {}
 
-    string getSubject() const { return subject; }
-    void setSubject(const string& subject) { this->subject = subject; }
+    // Просто добавляем студента в вектор
+    void addStudent(Student* s) {
+        students.push_back(s);
+    }
+
+    // Геттер для вектора (чтобы вывести в main)
+    const vector<Student*>& getStudents() const { 
+        return students; 
+    }
 
     string getRole() const override { return "Преподаватель"; }
-
-    void printInfo() const override {
-        cout << "[" << getRole() << "] ID: " << id
-             << " | Имя: " << name
-             << " | Предмет: " << subject << endl;
-    }
+    
+    // Объявляем тут, реализуем после класса Student
+    void printInfo() const override;
 };
 
 class Student : public User {
@@ -47,27 +52,29 @@ private:
     Teacher* curator;
 
 public:
-    Student(int id, const string& name, const string& group, Teacher* curator = nullptr)
-        : User(id, name), group(group), curator(curator) {}
-
-    string getGroup() const { return group; }
-    void setGroup(const string& group) { this->group = group; }
+    Student(int id, const string& name, const string& group, Teacher* curator)
+        : User(id, name), group(group), curator(curator) {
+        // Как только создали студента, сразу говорим куратору: "запиши меня к себе"
+        curator->addStudent(this); 
+    }
 
     Teacher* getCurator() const { return curator; }
-    void setCurator(Teacher* curator) { this->curator = curator; }
 
     string getRole() const override { return "Студент"; }
 
     void printInfo() const override {
-        cout << "[" << getRole() << "] ID: " << id
-             << " | Имя: " << name
-             << " | Группа: " << group;
-        if (curator != nullptr) {
-            cout << " | Куратор: " << curator->getName();
-        }
-        cout << endl;
+        cout << "[Студент] ID: " << id << " | Имя: " << name
+             << " | Группа: " << group 
+             << " | Куратор: " << curator->getName() << endl;
     }
 };
+
+// Реализация Teacher::printInfo
+void Teacher::printInfo() const {
+    cout << "[Преподаватель] ID: " << id << " | Имя: " << name
+         << " | Предмет: " << subject 
+         << " | Студентов: " << students.size() << endl;
+}
 
 void printAll(const vector<User*>& users) {
     cout << "\n=== Список пользователей ===" << endl;
@@ -77,33 +84,43 @@ void printAll(const vector<User*>& users) {
 }
 
 int main() {
+    // 1. Создаем преподавателей
     Teacher* t1 = new Teacher(201, "Петр Петров", "Математика");
     Teacher* t2 = new Teacher(202, "Анна Смирнова", "Физика");
 
-    vector<User*> users;
+    // 2. Создаем студентов (они автоматически запишутся к кураторам)
+    Student* s1 = new Student(101, "Иван Иванов", "Группа А-101", t1);
+    Student* s2 = new Student(102, "Мария Сидорова", "Группа Б-202", t2);
 
-    users.push_back(new Student(101, "Иван Иванов", "Группа А-101", t1));
-    users.push_back(new Student(102, "Мария Сидорова", "Группа Б-202", t2));
-    
+    // 3. Складываем всех в один вектор
+    vector<User*> users;
+    users.push_back(s1);
+    users.push_back(s2);
     users.push_back(t1);
     users.push_back(t2);
 
+    // 4. Полиморфный вывод
     printAll(users);
 
-    cout << "\n=== Связи 'студент -> куратор' ===" << endl;
+    // 5. Демонстрация новой связи: куратор -> студенты
+    cout << "\n=== Связи 'куратор -> студенты' ===" << endl;
     for (size_t i = 0; i < users.size(); ++i) {
-        Student* s = dynamic_cast<Student*>(users[i]);
-        if (s != nullptr && s->getCurator() != nullptr) {
-            cout << s->getName() << " учится у куратора "
-                 << s->getCurator()->getName() << endl;
+        // Ищем преподавателей
+        Teacher* t = dynamic_cast<Teacher*>(users[i]);
+        if (t != nullptr) {
+            cout << "У куратора " << t->getName() << " студенты: ";
+            for (size_t j = 0; j < t->getStudents().size(); ++j) {
+                cout << t->getStudents()[j]->getName() << " ";
+            }
+            cout << endl;
         }
     }
 
-    cout << "\nУдаление объектов..." << endl;
-    for (size_t i = 0; i < users.size(); ++i) {
-        delete users[i];
-    }
+    // 6. Очистка памяти
+    delete s1;
+    delete s2;
+    delete t1;
+    delete t2;
 
-    cout << "Все объекты удалены. Программа завершена." << endl;
     return 0;
 }
