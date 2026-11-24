@@ -3,7 +3,7 @@
 #include <vector>
 using namespace std;
 
-class Student; // предварительное объявление
+class Student; 
 
 class User {
 protected:
@@ -24,25 +24,25 @@ public:
 class Teacher : public User {
 private:
     string subject;
-    vector<Student*> students; // Список студентов куратора
+    vector<Student*> students; 
 
 public:
     Teacher(int id, const string& name, const string& subject)
         : User(id, name), subject(subject) {}
 
-    // Просто добавляем студента в вектор
+   
     void addStudent(Student* s) {
         students.push_back(s);
     }
 
-    // Геттер для вектора (чтобы вывести в main)
+    
     const vector<Student*>& getStudents() const { 
         return students; 
     }
 
     string getRole() const override { return "Преподаватель"; }
     
-    // Объявляем тут, реализуем после класса Student
+    
     void printInfo() const override;
 };
 
@@ -54,7 +54,7 @@ private:
 public:
     Student(int id, const string& name, const string& group, Teacher* curator)
         : User(id, name), group(group), curator(curator) {
-        // Как только создали студента, сразу говорим куратору: "запиши меня к себе"
+        
         curator->addStudent(this); 
     }
 
@@ -69,7 +69,7 @@ public:
     }
 };
 
-// Реализация Teacher::printInfo
+
 void Teacher::printInfo() const {
     cout << "[Преподаватель] ID: " << id << " | Имя: " << name
          << " | Предмет: " << subject 
@@ -84,25 +84,21 @@ void printAll(const vector<User*>& users) {
 }
 
 int main() {
-    // 1. Создаем преподавателей
+    
     Teacher* t1 = new Teacher(201, "Петр Петров", "Математика");
     Teacher* t2 = new Teacher(202, "Анна Смирнова", "Физика");
 
-    // 2. Создаем студентов (они автоматически запишутся к кураторам)
     Student* s1 = new Student(101, "Иван Иванов", "Группа А-101", t1);
     Student* s2 = new Student(102, "Мария Сидорова", "Группа Б-202", t2);
 
-    // 3. Складываем всех в один вектор
     vector<User*> users;
     users.push_back(s1);
     users.push_back(s2);
     users.push_back(t1);
     users.push_back(t2);
 
-    // 4. Полиморфный вывод
     printAll(users);
 
-    // 5. Демонстрация новой связи: куратор -> студенты
     cout << "\n=== Связи 'куратор -> студенты' ===" << endl;
     for (size_t i = 0; i < users.size(); ++i) {
         // Ищем преподавателей
@@ -115,8 +111,6 @@ int main() {
             cout << endl;
         }
     }
-
-    // 6. Очистка памяти
     delete s1;
     delete s2;
     delete t1;
